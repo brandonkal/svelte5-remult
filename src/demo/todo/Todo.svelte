@@ -26,16 +26,18 @@
 			})
 	})
 
-	let newTaskTitle = $state('')
+	// let newTaskTitle = $state('')
+	let editingTask = $state(new Task())
+
 	const addTask = async (event: Event) => {
 		event.preventDefault()
 		try {
-			const newTask = await repo(Task).insert({ url: newTaskTitle })
+			const newTask = await repo(Task).insert(editingTask)
 			tasks = [...tasks, newTask]
-			newTaskTitle = ''
+			editingTask = new Task()
 			formError = ''
 		} catch (error) {
-			formError = error.message
+			formError = (error as { message: string }).message
 		}
 	}
 
@@ -60,7 +62,7 @@
 	<main>
 		<form onsubmit={addTask}>
 			<input
-				bind:value={newTaskTitle}
+				bind:value={editingTask.url}
 				placeholder="What needs to be done?"
 				type="text"
 			/>
