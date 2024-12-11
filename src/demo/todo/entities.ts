@@ -1,4 +1,4 @@
-import { Entity, Fields } from "remult";
+import { Entity, Fields, Relations } from "remult";
 
 function isValidURL(input: string) {
 	if (typeof input !== "string") return false;
@@ -16,14 +16,14 @@ function isValidURL(input: string) {
 	}
 }
 
-@Entity("tasks", {
+@Entity("modules", {
   allowApiCrud: true,
 })
-export class Task {
+export class Module {
   @Fields.cuid()
   id = "";
 
-  @Fields.string<Task, string>({
+  @Fields.string<Module, string>({
 		validate: (input, context) => {
 			console.log("validating url string:", input);
 			if (isValidURL(input.url)) return true;
@@ -37,4 +37,28 @@ export class Task {
 
   @Fields.createdAt()
   createdAt?: Date;
+
+  @Relations.toOne<Module, Panel>(() => Panel)
+	panel!: Panel;
+}
+
+@Entity<Panel>("panels")
+export class Panel {
+	@Fields.cuid()
+	id!: string;
+
+	@Fields.string()
+	title = "";
+
+	@Fields.number({ required: true, allowNull: false })
+	version!: number;
+
+	@Fields.createdAt({ allowNull: false, includeInApi: false })
+	createdAt?: Date;
+
+	@Fields.date({ allowNull: false, includeInApi: false })
+	modifiedAt = new Date();
+
+	@Relations.toMany<Panel, Module>(() => Module, { defaultIncluded: true })
+	modules?: Module[];
 }
