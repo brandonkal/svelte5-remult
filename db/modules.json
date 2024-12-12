@@ -7,14 +7,14 @@
   },
   {
     "id": "tol2hrgwgk5dphiegqigm1s5",
-    "url": "https://demo.com/page/4zz",
-    "completed": false,
+    "url": "https://demo.com/page/4zab",
+    "completed": true,
     "createdAt": "2024-12-12T14:25:04.917Z"
   },
   {
     "id": "lrl3ccvf7epm4hbncg6cusi2",
     "url": "https://test.com/2",
-    "completed": false,
+    "completed": true,
     "createdAt": "2024-12-12T18:03:08.384Z",
     "panel": ""
   },
