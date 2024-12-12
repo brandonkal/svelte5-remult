@@ -27,22 +27,43 @@
 	})
 
 	// let newModuleTitle = $state('')
-	let editingModule = $state(new Module())
+	let editingModule = $state({ ...new Module() })
 
-	let formHasEmpty = $derived(
-		//@ts-ignore -- TypeScript is being weird
-		!editingModule || editingModule.url.length === 0
-	)
+	let formHasEmpty = $derived(!editingModule || editingModule.url.length === 0)
+
+	function isErrorWithMessage(error: unknown): error is { message: string } {
+		return (
+			typeof error === 'object' &&
+			error !== null &&
+			'message' in error &&
+			typeof (error as { message: unknown }).message === 'string'
+		)
+	}
 
 	const addModule = async (event: Event) => {
 		event.preventDefault()
 		try {
-			const newModule = await repo(Module).insert(editingModule)
-			tasks = [...tasks, newModule]
-			editingModule = new Module()
-			formError = ''
+			if (editingModule.id) {
+				const updatedModule = await repo(Module).save(editingModule)
+				tasks = [
+					...tasks.map((m) => (m.id === editingModule.id ? updatedModule : m)),
+				]
+				editingModule = { ...new Module() }
+				formError = ''
+			} else {
+				const newModule = await repo(Module).insert(editingModule)
+				tasks = [...tasks, newModule]
+				editingModule = { ...new Module() }
+				formError = ''
+			}
 		} catch (error) {
-			formError = (error as { message: string }).message
+			if (typeof error === 'string') {
+				formError = error
+			} else if (isErrorWithMessage(error)) {
+				formError = error.message
+			} else {
+				formError = 'An unknown error occurred'
+			}
 		}
 	}
 
@@ -50,9 +71,8 @@
 		return await repo(Module).update(task.id, { completed })
 	}
 
-	const deleteModule = async (task: Module) => {
-		await repo(Module).delete(task)
-		tasks = tasks.filter((c) => c.id !== task.id)
+	const editModule = async (mod: Module) => {
+		editingModule = { ...mod } // This is what causes the client to always perform a PUT even if URL is invalid!
 	}
 </script>
 
@@ -91,9 +111,7 @@
 				<span>
 					<label for={task.id}>{task.url}</label>
 				</span>
-				<button onclick={() => deleteModule(task)}>
-					<img src="trash.svg" alt="Delete" />
-				</button>
+				<button onclick={() => editModule(task)}> Edit </button>
 			</div>
 		{/each}
 	</main>
