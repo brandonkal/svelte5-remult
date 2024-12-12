@@ -12,8 +12,8 @@
 	}
 
 	$effect(() => {
-		repo(Module)
-			.find({
+		return repo(Module)
+			.liveQuery({
 				where: {
 					completed: hideCompleted ? false : undefined,
 				},
@@ -21,8 +21,8 @@
 					createdAt: 'desc',
 				},
 			})
-			.then((_tasks) => {
-				tasks = _tasks
+			.subscribe((info) => {
+				tasks = info.applyChanges(tasks)
 			})
 	})
 
@@ -45,18 +45,11 @@
 		try {
 			if (editingModule.id) {
 				const modRef = tasks.find((m) => m.id === editingModule.id)
-				const updatedModule = await repo(Module).update(
-					modRef || editingModule,
-					editingModule
-				)
-				tasks = [
-					...tasks.map((m) => (m.id === editingModule.id ? updatedModule : m)),
-				]
+				await repo(Module).update(modRef || editingModule, editingModule)
 				editingModule = { ...new Module() }
 				formError = ''
 			} else {
-				const newModule = await repo(Module).insert(editingModule)
-				tasks = [...tasks, newModule]
+				await repo(Module).insert(editingModule)
 				editingModule = { ...new Module() }
 				formError = ''
 			}
@@ -72,7 +65,7 @@
 	}
 
 	const setCompleted = async (task: Module, completed: boolean) => {
-		return await repo(Module).update(task.id, { completed })
+		return await repo(Module).update(task, { completed })
 	}
 
 	const editModule = async (mod: Module) => {

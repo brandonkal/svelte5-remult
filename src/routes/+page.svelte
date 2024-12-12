@@ -20,9 +20,7 @@
 			<a class="button" href="https://learn.remult.dev/" target="_blank">
 				Interactive Tutorial
 			</a>
-			<a class="button" href="https://remult.dev/docs" target="_blank">
-				Documentation
-			</a>
+			<a class="button" href="/empty"> Empty Test </a>
 			<a class="button" href="https://github.com/remult/remult" target="_blank">
 				Github
 			</a>
