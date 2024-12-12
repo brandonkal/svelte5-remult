@@ -44,7 +44,19 @@
 		event.preventDefault()
 		try {
 			if (editingModule.id) {
-				const updatedModule = await repo(Module).save(editingModule)
+				const modRef = tasks.find((m) => m.id === editingModule.id)
+				if (modRef) {
+				}
+
+				// const theRepo = repo(Module)
+				const updatedModule = await repo(Module).update(
+					modRef || editingModule,
+					editingModule
+				)
+				const r = repo(Module).getEntityRef(editingModule)
+				// const error = await theRepo.validate(editingModule)
+				// if (error) throw error
+				// const updatedModule = await theRepo.save(editingModule)
 				tasks = [
 					...tasks.map((m) => (m.id === editingModule.id ? updatedModule : m)),
 				]
