@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { repo } from "remult";
+  import { EntityError, repo } from "remult";
   import { Module } from "./entities";
   import Tile from "../Tile.svelte";
 
@@ -31,15 +31,6 @@
 
   let formHasEmpty = $derived(!editingModule || editingModule.url.length === 0);
 
-  function isErrorWithMessage(error: unknown): error is { message: string } {
-    return (
-      typeof error === "object" &&
-      error !== null &&
-      "message" in error &&
-      typeof (error as { message: unknown }).message === "string"
-    );
-  }
-
   const addModule = async (event: Event) => {
     event.preventDefault();
     try {
@@ -54,9 +45,7 @@
         formError = "";
       }
     } catch (error) {
-      if (typeof error === "string") {
-        formError = error;
-      } else if (isErrorWithMessage(error)) {
+      if (error instanceof EntityError) {
         formError = error.message;
       } else {
         formError = "An unknown error occurred";
