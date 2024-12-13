@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { EntityError, repo } from "remult";
+  import { EntityError, Remult, repo } from "remult";
   import { Module } from "./entities";
   import Tile from "../Tile.svelte";
+  import { createSubscriber } from "svelte/reactivity";
 
   let formError = $state("");
 
@@ -10,6 +11,21 @@
   function toggleHideCompleted() {
     hideCompleted = !hideCompleted;
   }
+
+  // To be done once in the application ? To be imported from remult/svelte ?
+  function initRemultSvelteReactivity() {
+    Remult.entityRefInit = (x) => {
+      let update = () => {};
+      let s = createSubscriber((u) => {
+        update = u;
+      });
+      x.subscribe({
+        reportObserved: () => s(),
+        reportChanged: () => update(),
+      });
+    };
+  }
+  initRemultSvelteReactivity();
 
   $effect(() => {
     return repo(Module)
@@ -27,23 +43,28 @@
   });
 
   // let newModuleTitle = $state('')
-  let editingModule = $state({ ...new Module() });
+  // let editingModule = $state({ ...new Module() });
+  // This creates the EntityRef
+  let editingModule = $state(repo(Module).create());
 
   let formHasEmpty = $derived(!editingModule || editingModule.url.length === 0);
 
-  const addModule = async (event: Event) => {
+  const saveModule = async (event: Event) => {
     event.preventDefault();
     try {
-      if (editingModule.id) {
-        const modRef = tasks.find((m) => m.id === editingModule.id);
-        await repo(Module).update(modRef || editingModule, editingModule);
-        editingModule = { ...new Module() };
-        formError = "";
-      } else {
-        await repo(Module).insert(editingModule);
-        editingModule = { ...new Module() };
-        formError = "";
-      }
+      // if (editingModule.id) {
+      //   const modRef = tasks.find((m) => m.id === editingModule.id);
+      //   await repo(Module).update(modRef || editingModule, editingModule);
+      //   editingModule = { ...new Module() };
+      //   formError = "";
+      // } else {
+      //   await repo(Module).insert(editingModule);
+      //   editingModule = { ...new Module() };
+      //   formError = "";
+      // }
+      await repo(Module).save(editingModule);
+      editingModule = repo(Module).create();
+      formError = "";
     } catch (error) {
       if (error instanceof EntityError) {
         formError = error.message;
@@ -58,7 +79,9 @@
   };
 
   const editModule = async (mod: Module) => {
-    editingModule = { ...mod }; // This is what causes the client to always perform a PUT even if URL is invalid!
+    // editingModule = mod; // This keeps the same signal reference, we probably don't want this
+    editingModule = repo(Module).getEntityRef(mod).clone();
+    // editingModule = { ...mod }; // This is what causes the client to always perform a PUT even if URL is invalid!
   };
 </script>
 
@@ -71,7 +94,7 @@
   status="Info"
 >
   <main>
-    <form onsubmit={addModule}>
+    <form onsubmit={saveModule}>
       <input
         bind:value={editingModule.url}
         placeholder="What needs to be done?"
@@ -82,7 +105,9 @@
       </button>
     </form>
     {#if formError.length > 0}
-      {formError}
+      <span style="color: red;">
+        {formError}
+      </span>
     {/if}
     {#each tasks as task, i}
       <div class="todo__task {task.completed ? 'completed' : ''}">
